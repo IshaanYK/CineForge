@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineForge AI — Autonomous Video Editor</title>
+  <link rel="stylesheet" href="/static/css/linear.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300F0FF'><path d='M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 4v10h16V8H4zm2-2h12V6H6v0z'/></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header>
+    <div class="brand-row">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </div>
+      <div class="brand-title">
+        CINEFORGE <span class="brand-badge">PRO v1.0</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <span class="brand-badge" id="proxyBadge" style="background: rgba(0, 240, 255, 0.12); color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.4); display: flex; align-items: center; gap: 5px;">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent-cyan);"></span>
+        B1 PROXY: 8081 ACTIVE
+      </span>
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span id="engineStatus">ENGINE READY (CUDA / MULTI-CORE)</span>
+      </div>
+      <button class="btn-secondary" id="openSettingsBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        AI Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workstation Layout -->
+  <main>
+
+    <!-- LEFT COLUMN: Input & AI Director Controls -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Raw Footage Ingestion
+        </div>
+        <span class="panel-subtitle">MP4, MOV, MKV, WEBM</span>
+      </div>
+
+      <!-- Drag & Drop Zone -->
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+          </svg>
+        </div>
+        <div class="dropzone-title">Drag & drop raw footage or click to browse</div>
+        <div class="dropzone-hint">Local processing — no external video upload</div>
+        <input type="file" id="fileInput" accept="video/*" style="display: none;">
+      </div>
+
+      <!-- File Attached Preview Bar -->
+      <div class="file-preview-card" id="filePreviewCard">
+        <div class="file-preview-info">
+          <div class="file-name" id="fileNameLabel">raw_recording.mp4</div>
+          <div class="file-meta" id="fileMetaLabel">Ready for AI Director</div>
+        </div>
+        <button class="btn-secondary" id="changeFileBtn" style="padding: 4px 10px; font-size: 11px;">Change</button>
+      </div>
+
+      <!-- Editing Presets -->
+      <div class="prompt-box">
+        <div class="label-row">
+          <label>Director Style Preset</label>
+        </div>
+        <div class="presets-grid">
+          <div class="preset-pill active" data-preset="viral_short">
+            <div class="preset-name">⚡ Viral Short (9:16)</div>
+            <div class="preset-desc">Talking-head reframe, kinetic captions, 1.20x punch zooms, zero dead-air.</div>
+          </div>
+          <div class="preset-pill" data-preset="cinematic_doc">
+            <div class="preset-name">🎬 Cinematic Doc (16:9)</div>
+            <div class="preset-desc">Subtle grading, smooth pacing, ambient music bed, -14 LUFS speech.</div>
+          </div>
+          <div class="preset-pill" data-preset="clean_podcast">
+            <div class="preset-name">🎙️ Clean Podcast</div>
+            <div class="preset-desc">Zero dead-air, natural pauses preserved, high voice intelligibility.</div>
+          </div>
+          <div class="preset-pill" data-preset="custom_prompt">
+            <div class="preset-name">🧠 Custom Prompt</div>
+            <div class="preset-desc">Direct the Gemini 2.5 Director agent via custom prompt below.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Precision Format & Audio Controls -->
+      <div class="prompt-box">
+        <div class="label-row">
+          <label>Precision Format & Audio Controls</label>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+          <div>
+            <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 4px;">Aspect Ratio Framing</label>
+            <select id="aspectRatioSelect" style="width: 100%; background: var(--surface-2); color: var(--ink-primary); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; outline: none;">
+              <option value="auto" selected>Auto-Detect Full-Bleed (Recommended for Shorts)</option>
+              <option value="9:16">9:16 Full-Bleed (Fill 1080x1920 No Bars)</option>
+              <option value="9:16_blur">9:16 Mirror Blur Padding (Pillarbox Glow)</option>
+              <option value="16:9">16:9 Landscape Widescreen (1920x1080)</option>
+              <option value="original">Preserve Source Dimensions Exactly</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 4px;">Audio Strategy</label>
+            <select id="musicModeSelect" style="width: 100%; background: var(--surface-2); color: var(--ink-primary); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; outline: none;">
+              <option value="auto" selected>Auto-Detect (Pure Audio if Song/Speech)</option>
+              <option value="none">Original Audio Only (No Added Music)</option>
+              <option value="synthwave">Layer Synthwave Lo-Fi Beat</option>
+              <option value="cinematic">Layer Cinematic Ambient Riser</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Strict Subtitle Language & Style -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+          <div>
+            <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 4px;">Subtitles (English / Hindi Only)</label>
+            <select id="subtitleLangSelect" style="width: 100%; background: var(--surface-2); color: var(--ink-primary); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; outline: none;">
+              <option value="auto_en_hi" selected>Auto-Detect (English / Hindi Only)</option>
+              <option value="hi">Hindi Only (हिंदी Devanagari)</option>
+              <option value="en">English Only (Native English)</option>
+              <option value="translate_en">Translate to English (Hindi -> English Subs)</option>
+              <option value="none">No Subtitles (Clean Video Only)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 4px;">Subtitle Visual Style</label>
+            <select id="subtitleStyleSelect" style="width: 100%; background: var(--surface-2); color: var(--ink-primary); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; outline: none;">
+              <option value="hormozi" selected>⚡ Hormozi Kinetic (Glowing Active Word)</option>
+              <option value="mrbeast">🔥 MrBeast Yellow Pop (Bold Black Outline)</option>
+              <option value="minimal">🎬 Minimal Studio (Clean Crisp White)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 6px;">
+          <div>
+            <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 4px;">Cut Aggressiveness</label>
+            <select id="cutModeSelect" style="width: 100%; background: var(--surface-2); color: var(--ink-primary); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; outline: none;">
+              <option value="ai_smart" selected>AI Smart Ripple Cut (Dead Air + Flow)</option>
+              <option value="dead_air_only">Silence Pauses Only (Keep All Words)</option>
+              <option value="keep_all">Keep Full Timeline (Zero Cuts)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="progressBarToggle" checked style="accent-color: var(--accent-cyan); width: 15px; height: 15px; cursor: pointer;">
+              <label for="progressBarToggle" style="font-size: 11px; color: var(--ink-primary); cursor: pointer; user-select: none;">
+                Neon Scrub Progress Bar
+              </label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="hookFlashToggle" checked style="accent-color: var(--accent-cyan); width: 15px; height: 15px; cursor: pointer;">
+              <label for="hookFlashToggle" style="font-size: 11px; color: var(--ink-primary); cursor: pointer; user-select: none;">
+                Visual Hook Attention Flash
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Director Prompt & Script Input -->
+      <div class="prompt-box">
+        <div class="label-row">
+          <label>AI Director Prompt / Script Instructions</label>
+          <span style="font-size: 11px; color: var(--ink-subtle);">Optional</span>
+        </div>
+        <textarea id="promptInput" placeholder="e.g. Cut all hesitation, punch zoom into key moments, make the caption colors electric cyan and laser yellow, and generate high CTR metadata..."></textarea>
+      </div>
+
+      <!-- Master Trigger Button -->
+      <button class="btn-primary" id="startProcessBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        INITIALIZE AI EDITING AGENT
+      </button>
+
+      <!-- Live Terminal Log Stream -->
+      <div class="prompt-box" style="margin-top: 4px;">
+        <div class="label-row">
+          <label>Agent Telemetry Stream</label>
+          <span id="hudPct" style="font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 600;">IDLE</span>
+        </div>
+        <div class="terminal-hud" id="terminalHud">
+          <div class="log-entry">
+            <span class="log-time">[0.0s]</span>
+            <span class="log-pct">0%</span>
+            <span class="log-msg">CineForge AI Core initialized. Waiting for raw footage input...</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Screening Room & Video Telemetry -->
+    <div class="screening-column">
+
+      <!-- Screening Tabs -->
+      <div class="panel" style="gap: 12px;">
+        <div class="panel-header">
+          <div class="player-tabs">
+            <button class="tab-btn active" id="tabEdited">AI Mastered View</button>
+            <button class="tab-btn" id="tabRaw">Original Raw Footage</button>
+          </div>
+          <div id="videoBadge" class="brand-badge" style="display: none;">1080P MASTERED</div>
+        </div>
+
+        <!-- Video Player -->
+        <div class="player-container">
+          <video id="mainVideoPlayer" controls playsinline>
+            <source src="" type="video/mp4">
+            Your browser does not support HTML5 video.
+          </video>
+          <div class="player-overlay-tag" id="playerOverlayTag">WAITING FOR FOOTAGE</div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn-primary" id="downloadMasterBtn" style="display: none; padding: 8px 16px; font-size: 12px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Master MP4
+          </button>
+        </div>
+      </div>
+
+      <!-- Master Edit Metrics -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Edit Decision List (EDL) Telemetry
+          </div>
+          <span class="panel-subtitle">Automated Decision Metrics</span>
+        </div>
+
+        <div class="stats-strip">
+          <div class="stat-card">
+            <span class="stat-label">Dead-Air Cut</span>
+            <span class="stat-value highlight-cyan" id="statTimeSaved">0.0s</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Ripple Cuts</span>
+            <span class="stat-value" id="statCuts">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Pattern Zooms</span>
+            <span class="stat-value highlight-yellow" id="statZooms">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Audio Loudnorm</span>
+            <span class="stat-value" id="statLoudness">-14 LUFS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Viral Growth & Distribution Kit (YouTube Shorts & LinkedIn) -->
+      <div class="panel" id="viralKitPanel" style="display: none; border-color: rgba(0, 240, 255, 0.35);">
+        <div class="panel-header">
+          <div class="panel-title" style="color: var(--accent-cyan);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Viral Distribution Kit (YouTube Shorts & LinkedIn)
+          </div>
+          <span class="panel-subtitle">Gemini 2.5 High-CTR Engine</span>
+        </div>
+
+        <!-- High-CTR YouTube Titles -->
+        <div style="margin-top: 4px;">
+          <label style="font-size: 11px; color: var(--ink-subtle); display: block; margin-bottom: 6px;">Viral YouTube Shorts Hook Titles (Click to Copy)</label>
+          <div id="viralTitlesList" style="display: flex; flex-direction: column; gap: 6px;">
+            <!-- Titles injected dynamically -->
+          </div>
+        </div>
+
+        <!-- YouTube Description & Hashtags -->
+        <div style="margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="font-size: 11px; color: var(--ink-subtle);">YouTube Shorts Description & Hashtags</label>
+            <button class="btn-secondary" id="copyYtDescBtn" style="padding: 2px 8px; font-size: 10px;">Copy Description</button>
+          </div>
+          <textarea id="ytDescOutput" readonly style="width: 100%; height: 75px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 11px; color: var(--ink-primary); padding: 8px; outline: none; resize: none;"></textarea>
+        </div>
+
+        <!-- LinkedIn Thought-Leadership Post -->
+        <div style="margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="font-size: 11px; color: var(--ink-subtle);">LinkedIn Thought-Leadership Post (High Impressions)</label>
+            <button class="btn-secondary" id="copyLinkedInBtn" style="padding: 2px 8px; font-size: 10px;">Copy LinkedIn Post</button>
+          </div>
+          <textarea id="linkedinPostOutput" readonly style="width: 100%; height: 110px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm); font-size: 11px; color: var(--ink-primary); padding: 8px; outline: none; resize: none;"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal: AI Director & Proxy Settings -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <div class="panel-header">
+        <div class="panel-title">
+          ⚡ Gemini B1 Web2API Proxy Configuration
+        </div>
+        <button class="btn-secondary" id="closeSettingsBtn" style="padding: 2px 8px;">✕</button>
+      </div>
+
+      <div style="background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 10px; font-size: 12px; color: var(--ink-muted);">
+        <b>Zero-Cost Local Architecture:</b> Powered by <a href="https://github.com/IshaanYK/gemini-1b-local-agent" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">IshaanYK/gemini-1b-local-agent</a> Web2API proxy. Runs locally on port 8081 without requiring Google Cloud API keys or credits.
+      </div>
+
+      <div class="option-group">
+        <label>B1 Gemini Proxy URL</label>
+        <input type="text" id="proxyUrlInput" value="http://127.0.0.1:8081/v1/chat/completions">
+        <span style="font-size: 11px; color: var(--ink-subtle);">Local OpenAI-compatible bridge to Gemini Web.</span>
+      </div>
+
+      <div class="option-group">
+        <label>Primary AI Director Model</label>
+        <select id="modelSelect">
+          <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro (Deep Hollywood Director Reasoning)</option>
+          <option value="gemini-2.0-flash-thinking">Gemini 2.0 Flash Thinking (Extended Reasoning)</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast Edits)</option>
+        </select>
+      </div>
+
+      <div class="option-group">
+        <label>Optional Google AI Studio API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="Leave empty to use B1 Local Proxy (Free)">
+        <span style="font-size: 11px; color: var(--ink-subtle);">Only required if running remote without local B1 proxy.</span>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button class="btn-secondary" id="testProxyBtn">Test Proxy Connection</button>
+        <button class="btn-primary" id="saveSettingsBtn">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

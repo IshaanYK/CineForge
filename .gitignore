@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+
+# Runtime media & large user files
+uploads/*
+exports/*
+!uploads/.gitkeep
+!exports/.gitkeep
+
+# Logs & local proxy secrets
+*.log
+.env
+gemini-web2api/config.json
+gemini-web2api/cookie.txt
+gemini-web2api/cookie.json
+gemini-web2api/gemini-auth.json
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
